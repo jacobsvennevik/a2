@@ -149,6 +149,8 @@ non terminal                  TypeDefSeq,
                               TypeDef;
 non terminal Type             Type,
                               TypeIdentifier;
+non terminal FieldNode        Field;
+non terminal List<FieldNode>  Fields;
 non terminal                  VarDeclSeq, 
                               VarDecl;
 non terminal DeclNode.ProcedureNode  ProcedureDef;
@@ -169,6 +171,7 @@ non terminal Operator         Relation,
                               AddOp,
                               MulOp,
                               UnaryOperator;
+non terminal List<ExpNode>    ExpList;
 non terminal ExpNode          LValue;
 
 
@@ -333,7 +336,47 @@ Type ::= TypeIdentifier:type
         {:
             RESULT = new Type.SubrangeType(subrxleft, lo, hi);
         :}
-    ;
+    | KW_RECORD Fields:fi KW_END
+               {:
+                   RESULT = new Type.RecordType(fixleft, fi);
+               :}
+
+    | POINTER TypeIdentifier:type
+                {:
+                    RESULT = new Type.PointerType(typexleft, type);
+                :}
+
+          ;
+Fields ::= Field:fi
+           {:
+               List<ExpNode> fields = new ArrayList<>();
+               fields.add(fi);
+               RESULT = fields;
+           :}
+       | Fields:fields SEMICOLON Field:fi
+           {:
+               fields.add(fi);
+               RESULT = fields;
+           :}
+       ;
+
+Field ::= IDENTIFIER:id COLON TypeIdentifier:type
+          {:
+              RESULT = new ExpNode.FieldNode(idxleft, id, type);
+          :}
+       ;
+ExpList ::= Condition:c
+            {:
+                List<Condition> conditions = new ArrayList<>();
+                conditions.add(c);
+                RESULT = conditions;
+            :}
+        | ExpList:expList COMMA Condition:c
+            {:
+                expList.add(c);
+                RESULT = expList;
+            :}
+        ;
 
 TypeIdentifier ::= IDENTIFIER:id
         {: /* As the type identifier may not be defined at this point.
@@ -452,7 +495,7 @@ Statement ::= KW_WHILE Condition:c KW_DO Statement:s
     |  LValue:lval ASSIGN Condition:rval
        {:
           RESULT = new StatementNode.AssignmentNode(lvalxleft, lval, rval);
-       :} 
+       :}
     |  KW_CALL IDENTIFIER:id LPAREN ActualParamList:pl RPAREN
         {: 
             RESULT = new StatementNode.CallNode(idxleft, id);
@@ -476,11 +519,20 @@ LValue ::= IDENTIFIER:id
              */
             RESULT = new ExpNode.IdentifierNode(idxleft, id);
         :}
+    |  LValue:lval KW_RECORD
+         {:
+            RESULT = new Type.RecordType(lval);
+         :}
+    | LValue:lval PERIOD IDENTIFIER: id
+        {:
+            RESULT =new ExpNode.dereferenceNode(lval, id);
+         :}
     | error:e
         {:
             RESULT = new ExpNode.ErrorNode(exleft);
         :}
     ;
+
 
 /* To allow for adding logical expressions. */
 Condition ::= RelCondition:e
@@ -590,7 +642,17 @@ Factor ::= PLUS Factor:e
         {:
             RESULT = lval;
         :}
+    | KW_NEW TypeIdentifier:type
+        {:
+            RESULT = new ExpNode.NewExpression(type);
+        :}
+    |  TypeIdentifier:type LCURLY ExpList:expList RCURLY
+        {:
+            RESULT = new ExpNode.RecordExpression(type, expList);
+        :}
     ;
+
+
 
 UnaryOperator ::= MINUS
         {:

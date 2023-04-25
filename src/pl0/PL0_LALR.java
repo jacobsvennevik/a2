@@ -2,7 +2,6 @@ package pl0;
 
 import java_cup.runtime.ComplexSymbolFactory;
 import machine.StackMachine;
-import parse.CUPParser;
 import source.Errors;
 import source.Source;
 import tree.CodeGenerator;
