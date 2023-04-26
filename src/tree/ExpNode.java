@@ -69,6 +69,10 @@ public abstract class ExpNode {
      */
     public abstract Code genCode(ExpTransform<Code> visitor);
 
+    public void accept(StaticChecker staticChecker) {
+
+    }
+
     /**
      * Tree node representing an erroneous expression.
      */
@@ -467,23 +471,26 @@ public abstract class ExpNode {
         /**
          * Expression representing the object being referenced
          */
-        private final ExpNode object;
+        private ExpNode LValue;
 
         /**
          * Name of the field being accessed
          */
         private final String fieldName;
 
-        public FieldReferenceNode(Location loc, ExpNode object, String fieldName) {
-            super(loc, object.getType());
-            this.object = object;
+
+        public FieldReferenceNode(Location loc, ExpNode lval, String fieldName) {
+            super(loc, lval.getType());
+            this.LValue = lval;
             this.fieldName = fieldName;
 
         }
 
-        public ExpNode getObject() {
-            return object;
+        public ExpNode getLeftValue() {
+            return LValue;
         }
+        public void setLeftValue(ExpNode lval){this.LValue = lval;}
+
 
         public String getFieldName() {
             return fieldName;
@@ -501,7 +508,7 @@ public abstract class ExpNode {
 
         @Override
         public String toString() {
-            return "FieldReferenceNode(" + object + ", " + fieldName + ")";
+            return "FieldReferenceNode(" + LValue + ", " + fieldName + ")";
         }
     }
 
@@ -509,26 +516,24 @@ public abstract class ExpNode {
      * Tree node for the dereference of a pointer.
      */
     public static class PointerDereferenceNode extends ExpNode {
-        /**
-         * Expression representing the pointer to be dereferenced
-         */
-        private final ExpNode pointerExp;
-        /**
-         * Type of the expression being dereferenced
-         */
-        private final Type derefType;
+        private ExpNode LValue;
+        private Type derefType;
+
+        public Type getDerefType() {
+            return derefType;
+        }
 
         /**
          * Create a new PointerDereferenceNode representing the dereference
          * of the given pointer expression.
          *
          * @param loc        location of the pointer dereference in the source code
-         * @param pointerExp expression representing the pointer to be dereferenced
+         * @param lval expression representing the pointer to be dereferenced
          */
-        public PointerDereferenceNode(Location loc, ExpNode pointerExp) {
-            super(loc, pointerExp.getType().optDereferenceType());
-            this.pointerExp = pointerExp;
-            this.derefType = pointerExp.getType().optDereferenceType();
+        public PointerDereferenceNode(Location loc, ExpNode lval) {
+            super(loc, lval.getType());
+            this.LValue = lval;
+            this.derefType = lval.getType();
         }
 
         /**
@@ -536,9 +541,11 @@ public abstract class ExpNode {
          *
          * @return expression representing the pointer to be dereferenced
          */
-        public ExpNode getPointerExp() {
-            return pointerExp;
+
+        public ExpNode getLeftValue() {
+            return LValue;
         }
+        public void setLeftValue(ExpNode lval){this.LValue = lval;}
 
         @Override
         public ExpNode transform(ExpTransform<ExpNode> visitor) {
@@ -552,7 +559,7 @@ public abstract class ExpNode {
 
         @Override
         public String toString() {
-            return "PointerDereference(" + pointerExp + ")";
+            return "PointerDereference(" + LValue + ")";
         }
     }
 

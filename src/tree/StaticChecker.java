@@ -484,26 +484,51 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
         endCheck("WidenSubrange");
         return node;
     }
-
-    @Override
-    public ExpNode visitExpListNode(ExpNode.ExpListNode node) {
-        return null;
-    }
-
-    @Override
-    public ExpNode visitFieldReferenceNode(ExpNode.FieldReferenceNode node) {
-        return null;
-    }
-
-    @Override
-    public ExpNode visitPointerDereferenceNode(ExpNode.PointerDereferenceNode node) {
-        return null;
-    }
-
-    @Override
+    /**
+     * New expression node
+     */
     public ExpNode visitNewNode(ExpNode.NewNode node) {
-        return null;
+        beginCheck("New");
+        //Possible that it gets checked before
+        node.accept(this);
+        endCheck("New");
+        return node;
     }
+
+    /**
+     * Pointer dereference expression node
+     */
+    public ExpNode visitPointerDereferenceNode(ExpNode.PointerDereferenceNode node) {
+        beginCheck("PointerDereference");
+
+        endCheck("PointerDereference");
+        return node;
+    }
+
+    /**
+     * Field reference expression node
+     */
+    public ExpNode visitFieldReferenceNode(ExpNode.FieldReferenceNode node) {
+        beginCheck("FieldReference");
+
+        endCheck("FieldReference");
+        return node;
+    }
+
+    /**
+     * Expression list node
+     */
+    public ExpNode visitExpListNode(ExpNode.ExpListNode node) {
+        beginCheck("ExpList");
+        for (ExpNode exp : node.getExpList()) {
+            exp.accept(this);
+        }
+        endCheck("ExpList");
+        return node;
+    }
+
+
+
 
     //**************************** Support Methods
 

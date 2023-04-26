@@ -149,8 +149,8 @@ non terminal                  TypeDefSeq,
                               TypeDef;
 non terminal Type             Type,
                               TypeIdentifier;
-non terminal List<Type.Field>      Fields;
-non terminal Type.Field       Field;
+non terminal FieldNode        Field;
+non terminal List<FieldNode>  Fields;
 non terminal                  VarDeclSeq, 
                               VarDecl;
 non terminal DeclNode.ProcedureNode  ProcedureDef;
@@ -349,7 +349,7 @@ Type ::= TypeIdentifier:type
           ;
 Fields ::= Field:fi
            {:
-               List<Type.Field> fields = new ArrayList<>();
+               List<ExpNode> fields = new ArrayList<>();
                fields.add(fi);
                RESULT = fields;
            :}
@@ -362,12 +362,12 @@ Fields ::= Field:fi
 
 Field ::= IDENTIFIER:id COLON TypeIdentifier:type
           {:
-              RESULT = new Type.Field(idxleft, id, type);
+              RESULT = new ExpNode.FieldNode(idxleft, id, type);
           :}
        ;
 ExpList ::= Condition:c
             {:
-                List<ExpNode> conditions = new ArrayList<>();
+                List<Condition> conditions = new ArrayList<>();
                 conditions.add(c);
                 RESULT = conditions;
             :}
@@ -519,13 +519,13 @@ LValue ::= IDENTIFIER:id
              */
             RESULT = new ExpNode.IdentifierNode(idxleft, id);
         :}
-    |  LValue:lval POINTER
+    |  LValue:lval KW_RECORD
          {:
-            RESULT = new ExpNode.PointerDereferenceNode(lvalxleft, lval);
+            RESULT = new Type.RecordType(lval);
          :}
     | LValue:lval PERIOD IDENTIFIER: id
         {:
-            RESULT = new ExpNode.FieldReferenceNode(lvalxleft, lval, id);
+            RESULT =new ExpNode.dereferenceNode(lval, id);
          :}
     | error:e
         {:
@@ -640,15 +640,15 @@ Factor ::= PLUS Factor:e
         :}
     |  LValue:lval
         {:
-            RESULT = lval;
+            RESULT = new ExpNode.NewExpression(type);
         :}
     | KW_NEW TypeIdentifier:type
         {:
-            RESULT = new ExpNode.NewNode(typexleft, type);
+            RESULT = new ExpNode.NewExpression(type);
         :}
     |  TypeIdentifier:type LCURLY ExpList:expList RCURLY
         {:
-            RESULT = new ExpNode.ExpListNode(typexleft, expList, type);
+            RESULT = new ExpNode.RecordExpression(type, expList);
         :}
     ;
 

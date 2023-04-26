@@ -1,9 +1,13 @@
 package tree;
 
+import java.util.*;
+
 import machine.Operation;
+import machine.StackMachine;
 import source.Errors;
 import source.VisitorDebugger;
 import syms.SymEntry;
+import syms.Type;
 import tree.StatementNode.*;
 
 /**

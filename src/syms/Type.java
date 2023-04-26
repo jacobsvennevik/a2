@@ -45,6 +45,7 @@ public abstract class Type {
      */
     public static final int SIZE_OF_ADDRESS = 1;
 
+
     /**
      * All types require space to be allocated (may be 0)
      */
