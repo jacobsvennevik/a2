@@ -2,7 +2,6 @@ package tree;
 
 import java.util.*;
 
-import java_cup.runtime.ComplexSymbolFactory;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import syms.SymEntry;
 import syms.Type;
@@ -430,5 +429,161 @@ public abstract class ExpNode {
             return "WidenSubrange(" + exp + ":" + getType() + ")";
         }
     }
+
+    public static class ExpListNode extends ExpNode {
+        private final List<ExpNode> expList;
+
+
+        public ExpListNode(Location loc, List<ExpNode> expList, Type type) {
+            super(loc, type);
+            this.expList = expList;
+        }
+
+
+        public List<ExpNode> getExpList() {
+            return expList;
+        }
+
+
+        public String toString(int level) {
+            StringBuilder result = new StringBuilder();
+            String sep = "";
+            for (ExpNode exp : getExpList()) {
+                result.append(sep).append(exp.toString());
+            }
+            return result.toString();
+        }
+
+        @Override
+        public ExpNode transform(ExpTransform<ExpNode> visitor) {
+            return visitor.visitExpListNode(this);
+        }
+
+        @Override
+        public Code genCode(ExpTransform<Code> visitor) {return visitor.visitExpListNode(this);}
+    }
+
+    public static class FieldReferenceNode extends ExpNode {
+        /**
+         * Expression representing the object being referenced
+         */
+        private final ExpNode object;
+
+        /**
+         * Name of the field being accessed
+         */
+        private final String fieldName;
+
+        public FieldReferenceNode(Location loc, ExpNode object, String fieldName) {
+            super(loc, object.getType());
+            this.object = object;
+            this.fieldName = fieldName;
+
+        }
+
+        public ExpNode getObject() {
+            return object;
+        }
+
+        public String getFieldName() {
+            return fieldName;
+        }
+
+        @Override
+        public ExpNode transform(ExpTransform<ExpNode> visitor) {
+            return visitor.visitFieldReferenceNode(this);
+        }
+
+        @Override
+        public Code genCode(ExpTransform<Code> visitor) {
+            return visitor.visitFieldReferenceNode(this);
+        }
+
+        @Override
+        public String toString() {
+            return "FieldReferenceNode(" + object + ", " + fieldName + ")";
+        }
+    }
+
+    /**
+     * Tree node for the dereference of a pointer.
+     */
+    public static class PointerDereferenceNode extends ExpNode {
+        /**
+         * Expression representing the pointer to be dereferenced
+         */
+        private final ExpNode pointerExp;
+        /**
+         * Type of the expression being dereferenced
+         */
+        private final Type derefType;
+
+        /**
+         * Create a new PointerDereferenceNode representing the dereference
+         * of the given pointer expression.
+         *
+         * @param loc        location of the pointer dereference in the source code
+         * @param pointerExp expression representing the pointer to be dereferenced
+         */
+        public PointerDereferenceNode(Location loc, ExpNode pointerExp) {
+            super(loc, pointerExp.getType().optDereferenceType());
+            this.pointerExp = pointerExp;
+            this.derefType = pointerExp.getType().optDereferenceType();
+        }
+
+        /**
+         * Get the expression representing the pointer to be dereferenced.
+         *
+         * @return expression representing the pointer to be dereferenced
+         */
+        public ExpNode getPointerExp() {
+            return pointerExp;
+        }
+
+        @Override
+        public ExpNode transform(ExpTransform<ExpNode> visitor) {
+            return visitor.visitPointerDereferenceNode(this);
+        }
+
+        @Override
+        public Code genCode(ExpTransform<Code> visitor) {
+            return visitor.visitPointerDereferenceNode(this);
+        }
+
+        @Override
+        public String toString() {
+            return "PointerDereference(" + pointerExp + ")";
+        }
+    }
+
+    /**
+     * Tree node for a new expression
+     */
+    public static class NewNode extends ExpNode {
+        /**
+         * Type of object being allocated
+         */
+
+        public NewNode(Location loc, Type type) {
+            super(loc, type);
+        }
+
+
+        @Override
+        public ExpNode transform(ExpTransform<ExpNode> visitor) {
+            return visitor.visitNewNode(this);
+        }
+
+        @Override
+        public Code genCode(ExpTransform<Code> visitor) {
+            return visitor.visitNewNode(this);
+        }
+
+        @Override
+        public String toString() {
+            return "new " + this.getType();
+        }
+    }
+
 
 }

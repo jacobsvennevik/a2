@@ -485,6 +485,26 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
         return node;
     }
 
+    @Override
+    public ExpNode visitExpListNode(ExpNode.ExpListNode node) {
+        return null;
+    }
+
+    @Override
+    public ExpNode visitFieldReferenceNode(ExpNode.FieldReferenceNode node) {
+        return null;
+    }
+
+    @Override
+    public ExpNode visitPointerDereferenceNode(ExpNode.PointerDereferenceNode node) {
+        return null;
+    }
+
+    @Override
+    public ExpNode visitNewNode(ExpNode.NewNode node) {
+        return null;
+    }
+
     //**************************** Support Methods
 
     /**

@@ -1,13 +1,9 @@
 package tree;
 
-import java.util.*;
-
 import machine.Operation;
-import machine.StackMachine;
 import source.Errors;
 import source.VisitorDebugger;
 import syms.SymEntry;
-import syms.Type;
 import tree.StatementNode.*;
 
 /**
@@ -415,6 +411,27 @@ public class CodeGenerator implements DeclVisitor, StatementTransform<Code>,
         endGen("WidenSubrange");
         return code;
     }
+
+    @Override
+    public Code visitExpListNode(ExpNode.ExpListNode node) {
+        return null;
+    }
+
+    @Override
+    public Code visitFieldReferenceNode(ExpNode.FieldReferenceNode node) {
+        return null;
+    }
+
+    @Override
+    public Code visitPointerDereferenceNode(ExpNode.PointerDereferenceNode node) {
+        return null;
+    }
+
+    @Override
+    public Code visitNewNode(ExpNode.NewNode node) {
+        return null;
+    }
+
     //**************************** Support Methods
 
     /**
