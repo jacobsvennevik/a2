@@ -418,23 +418,62 @@ public class CodeGenerator implements DeclVisitor, StatementTransform<Code>,
 
     @Override
     public Code visitExpListNode(ExpNode.ExpListNode node) {
-        return null;
+        beginGen("ExpList");
+        Code code = new Code();
+        for (ExpNode exp : node.getExpList()) {
+            code.append(exp.genCode(this));
+        }
+        endGen("ExpList");
+        return code;
     }
 
     @Override
     public Code visitFieldReferenceNode(ExpNode.FieldReferenceNode node) {
-        return null;
+        beginGen("FieldReference");
+        Code code = new Code();
+
+        // Generate code for the record expression
+        code.append(node.getLeftValue().genCode(this));
+
+        // Add the field offset to the base address of the record
+        code.genLoadConstant(node.getLocation().getOffset());
+        code.generateOp(Operation.ADD);
+
+        endGen("FieldReference");
+        return code;
     }
 
     @Override
     public Code visitPointerDereferenceNode(ExpNode.PointerDereferenceNode node) {
-        return null;
+        beginGen("PointerDereference");
+        Code code = new Code();
+
+        // Generate code for the pointer expression
+        code.append(node.getLeftValue().genCode(this));
+
+        // Load the value at the pointer's address
+        code.genLoad(node.getType().optDereferenceType());
+
+        endGen("PointerDereference");
+        return code;
     }
 
     @Override
     public Code visitNewNode(ExpNode.NewNode node) {
-        return null;
+        beginGen("New");
+        Code code = new Code();
+
+        // Load the size of the memory block to be allocated
+        int size = node.getType().getSpace();
+        code.genLoadConstant(size);
+
+        // Call the memory allocation routine
+        code.generateOp(Operation.ALLOC_STACK);
+
+        endGen("New");
+        return code;
     }
+
 
     //**************************** Support Methods
 

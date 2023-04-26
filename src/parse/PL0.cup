@@ -396,7 +396,7 @@ VarDeclSeq ::= VarDecl
     ;
 
 VarDecl ::= IDENTIFIER:id COLON TypeIdentifier:type SEMICOLON
-        {: 
+        {:
             // Variables are always of ReferenceType.
             if(currentScope.addVariable(id, idxleft, type) == null) {
                 errors.error(id + " already declared in this scope", idxleft);
@@ -404,7 +404,7 @@ VarDecl ::= IDENTIFIER:id COLON TypeIdentifier:type SEMICOLON
         :}
     |  error
     ;
-    
+
 ProcedureDef ::= ProcedureHead:procEntry EQUALS Block:b SEMICOLON
         {:
             /* Executed after recognising the whole procedure.
@@ -416,7 +416,7 @@ ProcedureDef ::= ProcedureHead:procEntry EQUALS Block:b SEMICOLON
     ;
 
 ProcedureHead ::= KW_PROCEDURE IDENTIFIER:id
-            LPAREN FormalParamList:pl 
+            LPAREN FormalParamList:pl
             RPAREN
         {:
             /* Add an entry for the procedure to the current scope */
@@ -441,7 +441,7 @@ ProcedureHead ::= KW_PROCEDURE IDENTIFIER:id
              * returned and a new scope created to allow the parsing of the
              * block body of the procedure to be processed in the new scope.
              */
-            SymEntry.ProcedureEntry procEntry = 
+            SymEntry.ProcedureEntry procEntry =
                 new SymEntry.ProcedureEntry(id, idxleft);
             procEntry.setScope(currentScope);
             currentScope = currentScope.newScope(procEntry);
@@ -473,23 +473,23 @@ StatementList ::= Statement:s
     ;
 
 Statement ::= KW_WHILE Condition:c KW_DO Statement:s
-        {: 
+        {:
             RESULT = new StatementNode.WhileNode(cxleft, c, s);
         :}
     |  KW_IF Condition:c KW_THEN Statement:s1 KW_ELSE Statement:s2
-        {: 
+        {:
             RESULT = new StatementNode.IfNode(cxleft, c, s1, s2);
         :}
     |  CompoundStatement:s
-        {: 
-            RESULT = s; 
+        {:
+            RESULT = s;
         :}
     | KW_READ LValue:lval
-        {: 
+        {:
             RESULT = new StatementNode.ReadNode(lvalxleft, lval);
         :}
     |  KW_WRITE Exp:e
-        {: 
+        {:
             RESULT = new StatementNode.WriteNode(exleft, e);
         :}
     |  LValue:lval ASSIGN Condition:rval
@@ -497,11 +497,11 @@ Statement ::= KW_WHILE Condition:c KW_DO Statement:s
           RESULT = new StatementNode.AssignmentNode(lvalxleft, lval, rval);
        :}
     |  KW_CALL IDENTIFIER:id LPAREN ActualParamList:pl RPAREN
-        {: 
+        {:
             RESULT = new StatementNode.CallNode(idxleft, id);
         :}
     |  error:loc
-        {: 
+        {:
             RESULT = new StatementNode.ErrorNode(locxleft);
         :}
     ;
@@ -512,8 +512,8 @@ ActualParamList ::= /* empty */
 
 LValue ::= IDENTIFIER:id
         {:
-            /* At this stage the identifier could be either a constant identifier or 
-             * a variable identifier but which cannot be determined until static 
+            /* At this stage the identifier could be either a constant identifier or
+             * a variable identifier but which cannot be determined until static
              * checking when the IdentifierNode will be transformed into either
              * a ConstNode or a VariableNode or detected as invalid.
              */
@@ -536,20 +536,20 @@ LValue ::= IDENTIFIER:id
 
 /* To allow for adding logical expressions. */
 Condition ::= RelCondition:e
-        {: 
+        {:
             RESULT = e;
         :}
     ;
 
 /* Relational operators are lower precedence than arithmetic operators. */
-RelCondition ::= Exp:e 
+RelCondition ::= Exp:e
         {:
             RESULT = e;
         :}
     |  Exp:e1 Relation:op Exp:e2
         {:
             RESULT = new ExpNode.BinaryNode(opxleft, op, e1,e2);
-        :} 
+        :}
     ;
 
 Relation ::= EQUALS
@@ -623,7 +623,7 @@ MulOp ::= TIMES
 
 Factor ::= PLUS Factor:e
         {:
-            RESULT = e; 
+            RESULT = e;
         :}
     |  UnaryOperator:op Factor:e
         {:
@@ -635,7 +635,7 @@ Factor ::= PLUS Factor:e
         :}
     |  NUMBER:n
         {:
-            RESULT = new ExpNode.ConstNode(nxleft, 
+            RESULT = new ExpNode.ConstNode(nxleft,
                     Predefined.INTEGER_TYPE, n);
         :}
     |  LValue:lval
@@ -659,6 +659,9 @@ UnaryOperator ::= MINUS
             RESULT = Operator.NEG_OP;
         :}
     ;
+
+
+
 
 
 

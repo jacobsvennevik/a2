@@ -490,7 +490,6 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
     public ExpNode visitNewNode(ExpNode.NewNode node) {
         beginCheck("New");
         //Possible that it gets checked before
-        node.accept(this);
         endCheck("New");
         return node;
     }
@@ -510,6 +509,12 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
      */
     public ExpNode visitFieldReferenceNode(ExpNode.FieldReferenceNode node) {
         beginCheck("FieldReference");
+        ExpNode lVal = node.getLeftValue().transform(this);
+        node.setLeftValue(lVal);
+        /* The type of the dereference node is the base type of its
+         * left value. */
+        Type lValueType = lVal.getType().optDereferenceType();
+        String fieldName = node.getFieldName();
 
         endCheck("FieldReference");
         return node;
@@ -520,9 +525,9 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
      */
     public ExpNode visitExpListNode(ExpNode.ExpListNode node) {
         beginCheck("ExpList");
-        for (ExpNode exp : node.getExpList()) {
+/*        for (ExpNode exp : node.getExpList()) {
             exp.accept(this);
-        }
+        }*/
         endCheck("ExpList");
         return node;
     }
