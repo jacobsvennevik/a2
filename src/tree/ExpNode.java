@@ -434,11 +434,11 @@ public abstract class ExpNode {
         }
     }
 
-    public static class ExpListNode extends ExpNode {
-        private final List<ExpNode> expList;
+    public static class RecordConstructorNode extends ExpNode {
+        private List<ExpNode> expList;
 
 
-        public ExpListNode(Location loc, List<ExpNode> expList, Type type) {
+        public RecordConstructorNode(Location loc, List<ExpNode> expList, Type type) {
             super(loc, type);
             this.expList = expList;
         }
@@ -448,7 +448,9 @@ public abstract class ExpNode {
             return expList;
         }
 
-
+        public void setExpList(List<ExpNode> expList){
+            this.expList = expList;
+        }
         public String toString(int level) {
             StringBuilder result = new StringBuilder();
             String sep = "";
@@ -460,14 +462,14 @@ public abstract class ExpNode {
 
         @Override
         public ExpNode transform(ExpTransform<ExpNode> visitor) {
-            return visitor.visitExpListNode(this);
+            return visitor.RecordConstructorNode(this);
         }
 
         @Override
-        public Code genCode(ExpTransform<Code> visitor) {return visitor.visitExpListNode(this);}
+        public Code genCode(ExpTransform<Code> visitor) {return visitor.RecordConstructorNode(this);}
     }
 
-    public static class FieldReferenceNode extends ExpNode {
+    public static class FieldAcessNode extends ExpNode {
         /**
          * Expression representing the object being referenced
          */
@@ -476,10 +478,10 @@ public abstract class ExpNode {
         /**
          * Name of the field being accessed
          */
-        private final String fieldName;
+        private String fieldName;
 
 
-        public FieldReferenceNode(Location loc, ExpNode lval, String fieldName) {
+        public FieldAcessNode(Location loc, ExpNode lval, String fieldName) {
             super(loc, lval.getType());
             this.LValue = lval;
             this.fieldName = fieldName;
@@ -496,19 +498,24 @@ public abstract class ExpNode {
             return fieldName;
         }
 
+
         @Override
         public ExpNode transform(ExpTransform<ExpNode> visitor) {
-            return visitor.visitFieldReferenceNode(this);
+            return visitor.visitFieldAcessNode(this);
         }
 
         @Override
         public Code genCode(ExpTransform<Code> visitor) {
-            return visitor.visitFieldReferenceNode(this);
+            return visitor.visitFieldAcessNode(this);
         }
 
         @Override
         public String toString() {
             return "FieldReferenceNode(" + LValue + ", " + fieldName + ")";
+        }
+
+        public void setFieldName(String fieldName) {
+            this.fieldName = fieldName;
         }
     }
 
@@ -517,11 +524,6 @@ public abstract class ExpNode {
      */
     public static class PointerDereferenceNode extends ExpNode {
         private ExpNode LValue;
-        private Type derefType;
-
-        public Type getDerefType() {
-            return derefType;
-        }
 
         /**
          * Create a new PointerDereferenceNode representing the dereference
@@ -533,7 +535,6 @@ public abstract class ExpNode {
         public PointerDereferenceNode(Location loc, ExpNode lval) {
             super(loc, lval.getType());
             this.LValue = lval;
-            this.derefType = lval.getType();
         }
 
         /**
@@ -541,6 +542,7 @@ public abstract class ExpNode {
          *
          * @return expression representing the pointer to be dereferenced
          */
+
 
         public ExpNode getLeftValue() {
             return LValue;
@@ -559,7 +561,7 @@ public abstract class ExpNode {
 
         @Override
         public String toString() {
-            return "PointerDereference(" + LValue + ")";
+            return "PointerNode(" + LValue + ")";
         }
     }
 

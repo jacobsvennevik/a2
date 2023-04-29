@@ -1276,7 +1276,7 @@ class CUP$CUPParser$actions {
 		Location idxright = ((java_cup.runtime.ComplexSymbolFactory.ComplexSymbol)CUP$CUPParser$stack.peek()).xright;
 		String id = (String)((java_cup.runtime.Symbol) CUP$CUPParser$stack.peek()).value;
 		
-            RESULT = new ExpNode.FieldReferenceNode(lvalxleft, lval, id);
+            RESULT = new ExpNode.FieldAcessNode(lvalxleft, lval, id);
          
               CUP$CUPParser$result = parser.getSymbolFactory().newSymbol("LValue",32, ((java_cup.runtime.Symbol)CUP$CUPParser$stack.elementAt(CUP$CUPParser$top-2)), ((java_cup.runtime.Symbol)CUP$CUPParser$stack.peek()), RESULT);
             }
@@ -1621,7 +1621,7 @@ class CUP$CUPParser$actions {
 		Location expListxright = ((java_cup.runtime.ComplexSymbolFactory.ComplexSymbol)CUP$CUPParser$stack.elementAt(CUP$CUPParser$top-1)).xright;
 		List<ExpNode> expList = (List<ExpNode>)((java_cup.runtime.Symbol) CUP$CUPParser$stack.elementAt(CUP$CUPParser$top-1)).value;
 		
-            RESULT = new ExpNode.ExpListNode(typexleft, expList, type);
+            RESULT = new ExpNode.RecordConstructorNode(typexleft, expList, type);
         
               CUP$CUPParser$result = parser.getSymbolFactory().newSymbol("Factor",26, ((java_cup.runtime.Symbol)CUP$CUPParser$stack.elementAt(CUP$CUPParser$top-3)), ((java_cup.runtime.Symbol)CUP$CUPParser$stack.peek()), RESULT);
             }

@@ -1,13 +1,9 @@
 package tree;
 
-import java.util.*;
-
 import machine.Operation;
-import machine.StackMachine;
 import source.Errors;
 import source.VisitorDebugger;
 import syms.SymEntry;
-import syms.Type;
 import tree.StatementNode.*;
 
 /**
@@ -417,31 +413,41 @@ public class CodeGenerator implements DeclVisitor, StatementTransform<Code>,
     }
 
     @Override
-    public Code visitExpListNode(ExpNode.ExpListNode node) {
-        beginGen("ExpList");
+    public Code RecordConstructorNode(ExpNode.RecordConstructorNode node) {
+        beginGen("Record Constructor");
         Code code = new Code();
+        System.out.println("fuuuuuck");
         for (ExpNode exp : node.getExpList()) {
             code.append(exp.genCode(this));
         }
-        endGen("ExpList");
+        endGen("Record Constructor");
         return code;
     }
 
     @Override
-    public Code visitFieldReferenceNode(ExpNode.FieldReferenceNode node) {
-        beginGen("FieldReference");
+    public Code visitFieldAcessNode(ExpNode.FieldAcessNode node) {
+        beginGen("FieldAcess");
         Code code = new Code();
 
         // Generate code for the record expression
         code.append(node.getLeftValue().genCode(this));
 
-        // Add the field offset to the base address of the record
-        code.genLoadConstant(node.getLocation().getOffset());
+        // Calculate the total offset for nested record fields
+        int totalOffset = node.getType().getRecordType().getOffset(node.getFieldName());
+
+        // Add the total offset to the base address of the record
+        code.genComment("add field offset for storing");
+        code.genLoadConstant(totalOffset);
         code.generateOp(Operation.ADD);
 
-        endGen("FieldReference");
+        endGen("FieldAcess");
         return code;
     }
+
+
+
+
+
 
     @Override
     public Code visitPointerDereferenceNode(ExpNode.PointerDereferenceNode node) {
@@ -468,7 +474,7 @@ public class CodeGenerator implements DeclVisitor, StatementTransform<Code>,
         code.genLoadConstant(size);
 
         // Call the memory allocation routine
-        code.generateOp(Operation.ALLOC_STACK);
+        code.generateOp(Operation.ALLOC_HEAP);
 
         endGen("New");
         return code;

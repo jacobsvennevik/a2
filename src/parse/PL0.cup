@@ -525,7 +525,7 @@ LValue ::= IDENTIFIER:id
          :}
     | LValue:lval PERIOD IDENTIFIER: id
         {:
-            RESULT = new ExpNode.FieldReferenceNode(lvalxleft, lval, id);
+            RESULT = new ExpNode.FieldAcessNode(lvalxleft, lval, id);
          :}
     | error:e
         {:
@@ -648,7 +648,7 @@ Factor ::= PLUS Factor:e
         :}
     |  TypeIdentifier:type LCURLY ExpList:expList RCURLY
         {:
-            RESULT = new ExpNode.ExpListNode(typexleft, expList, type);
+            RESULT = new ExpNode.RecordConstructorNode(typexleft, expList, type);
         :}
     ;
 

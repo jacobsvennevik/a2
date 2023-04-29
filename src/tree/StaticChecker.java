@@ -489,7 +489,11 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
      */
     public ExpNode visitNewNode(ExpNode.NewNode node) {
         beginCheck("New");
-        //Possible that it gets checked before
+
+        if(!(node.getType() instanceof Type.PointerType)){
+            staticError("Identifier not a PointerType", node.getLocation());
+        }
+
         endCheck("New");
         return node;
     }
@@ -499,36 +503,56 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
      */
     public ExpNode visitPointerDereferenceNode(ExpNode.PointerDereferenceNode node) {
         beginCheck("PointerDereference");
+        ExpNode lVal = node.getLeftValue().transform(this);
+        node.setLeftValue(lVal);
+        Type lValType = lVal.getType();
+        //System.out.println("In first if :) " + lValType.getName() + " getPointerType " + lValType.getPointerType());
+        if (lValType instanceof Type.PointerType) {
 
-        endCheck("PointerDereference");
+        }
+        else{
+            //should not be possible
+            staticError("Node not PointerType", node.getLocation());
+        }
+
+        endCheck("Identifier in pointer not an type");
         return node;
     }
 
     /**
      * Field reference expression node
      */
-    public ExpNode visitFieldReferenceNode(ExpNode.FieldReferenceNode node) {
+    public ExpNode visitFieldAcessNode(ExpNode.FieldAcessNode node) {
         beginCheck("FieldReference");
+        System.out.println("hello t: " + node.getType() + " leftvalue:  " + node.getLeftValue() + " field " + node.getFieldName());
+        String fieldName = node.getFieldName();
+        if (fieldName.isEmpty()) {
+            //Should not happen
+            staticError("FieldName empty", node.getLocation());
+        }
         ExpNode lVal = node.getLeftValue().transform(this);
         node.setLeftValue(lVal);
         /* The type of the dereference node is the base type of its
          * left value. */
         Type lValueType = lVal.getType().optDereferenceType();
-        String fieldName = node.getFieldName();
-
+        System.out.println("byby t: " + node.getType() + " leftvalue:  " + node.getLeftValue().getType()+ " Node.field " + node.getFieldName() + " fieldName " + fieldName);
         endCheck("FieldReference");
         return node;
     }
 
+
     /**
      * Expression list node
      */
-    public ExpNode visitExpListNode(ExpNode.ExpListNode node) {
-        beginCheck("ExpList");
-/*        for (ExpNode exp : node.getExpList()) {
-            exp.accept(this);
-        }*/
-        endCheck("ExpList");
+    public ExpNode RecordConstructorNode(ExpNode.RecordConstructorNode node) {
+        beginCheck("RecordConstructor");
+        List<ExpNode> expList = node.getExpList();
+        List<ExpNode> TransformedExpList = new ArrayList<>();
+        for (ExpNode exp : expList) {
+            TransformedExpList.add(exp.transform(this));
+        }
+        node.setExpList(TransformedExpList);
+        endCheck("RecordConstructor");
         return node;
     }
 
