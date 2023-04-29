@@ -524,20 +524,34 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
      */
     public ExpNode visitFieldAcessNode(ExpNode.FieldAcessNode node) {
         beginCheck("FieldReference");
-        System.out.println("hello t: " + node.getType() + " leftvalue:  " + node.getLeftValue() + " field " + node.getFieldName());
+        // Get the field name and ensure it's not empty
         String fieldName = node.getFieldName();
         if (fieldName.isEmpty()) {
-            //Should not happen
-            staticError("FieldName empty", node.getLocation());
+            // Should not happen
+            staticError("Invalid field access: fieldName empty", node.getLocation());
         }
         ExpNode lVal = node.getLeftValue().transform(this);
         node.setLeftValue(lVal);
         Type lValueType = lVal.getType().optDereferenceType();
-        if (lValueType instanceof Type.RecordType){
-            Type.Field field = lValueType.getRecordType().getField(node.getFieldName());
-            node.setType(new Type.ReferenceType(field.getLocation(), field.getType()));
+
+        if (lValueType instanceof Type.RecordType) {
+            Type.RecordType recType = lValueType.getRecordType();
+
+            // Check if the record type contains the specified field
+            if (recType.containsField(fieldName)) {
+                Type.Field field = recType.getField(fieldName);
+                // Set the node type as a reference to the field's type
+                node.setType(new Type.ReferenceType(field.getLocation(), field.getType()));
+            } else {
+                staticError("Record does not contain field", node.getLocation());
+            }
+        } else if (node.getLeftValue() instanceof ExpNode.FieldAcessNode) {
+            // If the left value is also a FieldAccessNode, recursively handle it
+            return visitFieldAcessNode((ExpNode.FieldAcessNode) node.getLeftValue());
+        } else {
+            staticError("Invalid field access: left value is not a record type or another field access", node.getLocation());
         }
-        System.out.println("byby t: " + node.getType() + " leftvalue:  " + node.getLeftValue().getType()+ " Node.field " + node.getFieldName() + " fieldName " + fieldName);
+
         endCheck("FieldReference");
         return node;
     }

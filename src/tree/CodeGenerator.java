@@ -428,17 +428,10 @@ public class CodeGenerator implements DeclVisitor, StatementTransform<Code>,
     public Code visitFieldAcessNode(ExpNode.FieldAcessNode node) {
         beginGen("FieldAcess");
         Code code = new Code();
-/*
-        // Generate code for the record expression
+
         code.append(node.getLeftValue().genCode(this));
-
-        // Calculate the total offset for nested record fields
-        int totalOffset = 2;
-
-        // Add the total offset to the base address of the record
         code.genComment("add field offset for storing");
-        code.genLoadConstant(totalOffset);
-        code.generateOp(Operation.ADD);*/
+        code.generateOp(Operation.ADD);
 
         endGen("FieldAcess");
         return code;
