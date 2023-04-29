@@ -532,9 +532,11 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
         }
         ExpNode lVal = node.getLeftValue().transform(this);
         node.setLeftValue(lVal);
-        /* The type of the dereference node is the base type of its
-         * left value. */
         Type lValueType = lVal.getType().optDereferenceType();
+        if (lValueType instanceof Type.RecordType){
+            Type.Field field = lValueType.getRecordType().getField(node.getFieldName());
+            node.setType(new Type.ReferenceType(field.getLocation(), field.getType()));
+        }
         System.out.println("byby t: " + node.getType() + " leftvalue:  " + node.getLeftValue().getType()+ " Node.field " + node.getFieldName() + " fieldName " + fieldName);
         endCheck("FieldReference");
         return node;
@@ -546,12 +548,7 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
      */
     public ExpNode RecordConstructorNode(ExpNode.RecordConstructorNode node) {
         beginCheck("RecordConstructor");
-        List<ExpNode> expList = node.getExpList();
-        List<ExpNode> TransformedExpList = new ArrayList<>();
-        for (ExpNode exp : expList) {
-            TransformedExpList.add(exp.transform(this));
-        }
-        node.setExpList(TransformedExpList);
+
         endCheck("RecordConstructor");
         return node;
     }
