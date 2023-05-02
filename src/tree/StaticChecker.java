@@ -297,6 +297,14 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
             for (Type t : ((Type.IntersectionType) opEntry.getType()).getTypes()) {
                 Type.FunctionType fType = ((Type.OperatorType)t).opType();
                 List<Type> argTypes = ((Type.ProductType)fType.getArgType()).getTypes();
+                // If pointertype set left and right types as the baseype
+                if (left.getType().getPointerType() instanceof Type.PointerType && right.getType().getPointerType() instanceof Type.PointerType) {
+                        Type.PointerType pointLeftType = left.getType().getPointerType();
+                        Type.PointerType pointRightType = right.getType().getPointerType();
+                        left.setType(pointLeftType.getBaseType());
+                        right.setType(pointRightType.getBaseType());
+
+                }
                 try {
                     /* Coerce the argument to the argument type for
                      * this operator type. If the coercion fails an
@@ -448,7 +456,6 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
             // Undefined identifier or a type or procedure identifier.
             // Set up new node to be an error node.
             newNode = new ExpNode.ErrorNode(node.getLocation());
-            //System.out.println("Entry = " + entry);
             staticError("Constant or variable identifier required", node.getLocation());
         }
         endCheck("Identifier");
@@ -489,13 +496,17 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
      */
     public ExpNode visitNewNode(ExpNode.NewNode node) {
         beginCheck("New");
-
-        if(!(node.getType() instanceof Type.PointerType)){
-            staticError("Identifier not a PointerType", node.getLocation());
+        Type nodeType = node.getType();
+        ExpNode newNode;
+        if(nodeType instanceof Type.IdRefType){
+            Type.IdRefType idRef = (Type.IdRefType) nodeType;
+            newNode = new ExpNode.NewNode(node.getLocation(), idRef.resolveType());
+        } else {
+            newNode = new ExpNode.ErrorNode(node.getLocation());
+            staticError("NewNode not of IdRefType", node.getLocation());
         }
-
         endCheck("New");
-        return node;
+        return newNode;
     }
 
     /**
@@ -503,19 +514,27 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
      */
     public ExpNode visitPointerDereferenceNode(ExpNode.PointerDereferenceNode node) {
         beginCheck("PointerDereference");
-        ExpNode lVal = node.getLeftValue().transform(this);
-        node.setLeftValue(lVal);
-        Type lValType = lVal.getType();
-        //System.out.println("In first if :) " + lValType.getName() + " getPointerType " + lValType.getPointerType());
-        if (lValType instanceof Type.PointerType) {
-
+        ExpNode pointerExp = node.getLeftValue().transform(this);
+        node.setLeftValue(pointerExp);
+        // Check that the left value is a pointer type
+        Type pointerType = pointerExp.getType();
+        if (pointerType instanceof Type.ReferenceType) {
+            Type.ReferenceType refType = (Type.ReferenceType) pointerType;
+            // Check that the pointed-to type is a pointer type
+            Type pointedToType = refType.getPointerType();
+            if (pointedToType instanceof Type.PointerType) {
+                Type.PointerType ptrType = (Type.PointerType) pointedToType;
+                // The type of the expression is the dereferenced type of the pointer type
+                Type derefType = ptrType.getBaseType().optDereferenceType();
+                node.setType(new Type.ReferenceType(derefType.resolveType()));
+            }
+            else {
+                staticError("type must be a pointer", node.getLocation());
+                node.setType(Type.ERROR_TYPE);
+            }
         }
-        else{
-            //should not be possible
-            staticError("Node not PointerType", node.getLocation());
-        }
 
-        endCheck("Identifier in pointer not an type");
+        endCheck("PointerDereference");
         return node;
     }
 
@@ -544,25 +563,44 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
                 node.setType(new Type.ReferenceType(field.getLocation(), field.getType()));
             } else {
                 staticError("Record does not contain field", node.getLocation());
+                node.setType(Type.ERROR_TYPE);
             }
         } else if (node.getLeftValue() instanceof ExpNode.FieldAcessNode) {
             // If the left value is also a FieldAccessNode, recursively handle it
             return visitFieldAcessNode((ExpNode.FieldAcessNode) node.getLeftValue());
         } else {
             staticError("Invalid field access: left value is not a record type or another field access", node.getLocation());
+            node.setType(Type.ERROR_TYPE);;
         }
-
         endCheck("FieldReference");
         return node;
     }
 
 
     /**
-     * Expression list node
+     * Record Constructor Node
      */
-    public ExpNode RecordConstructorNode(ExpNode.RecordConstructorNode node) {
+    public ExpNode visitRecordConstructorNode(ExpNode.RecordConstructorNode node) {
         beginCheck("RecordConstructor");
-
+        Type nodeType = node.getType().resolveType();
+        List<ExpNode> ExpList = node.getExpList();
+        if (nodeType instanceof Type.RecordType) {
+            Type.RecordType recType = (Type.RecordType) nodeType;
+            List<Type.Field> fieldList = recType.getFieldList();
+            for (int i = 0; i < fieldList.size(); i++){
+                Type fieldListElement = fieldList.get(i).getType().resolveType();
+                ExpNode ExpListElement = ExpList.get(i).transform(this);
+                ExpNode coercedExp = fieldListElement.coerceExp(ExpListElement);
+                ExpList.set(i, coercedExp);
+                    if (coercedExp.getType() == Type.ERROR_TYPE) {
+                        staticError("Expression type " + ExpList.get(i).toString() + " is not assignment compatible with field type " + fieldList.get(i).toString() , node.getLocation());
+                    }
+            }
+            node.setType(recType);
+        }else{
+            staticError("Invalid record type identifier", node.getLocation());
+            node.setType(Type.ERROR_TYPE);
+        }
         endCheck("RecordConstructor");
         return node;
     }

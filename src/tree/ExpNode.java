@@ -462,11 +462,11 @@ public abstract class ExpNode {
 
         @Override
         public ExpNode transform(ExpTransform<ExpNode> visitor) {
-            return visitor.RecordConstructorNode(this);
+            return visitor.visitRecordConstructorNode(this);
         }
 
         @Override
-        public Code genCode(ExpTransform<Code> visitor) {return visitor.RecordConstructorNode(this);}
+        public Code genCode(ExpTransform<Code> visitor) {return visitor.visitRecordConstructorNode(this);}
     }
 
     public static class FieldAcessNode extends ExpNode {
@@ -514,9 +514,6 @@ public abstract class ExpNode {
             return "FieldReferenceNode(" + LValue + ", " + fieldName + ")";
         }
 
-        public void setFieldName(String fieldName) {
-            this.fieldName = fieldName;
-        }
     }
 
     /**

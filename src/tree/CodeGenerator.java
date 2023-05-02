@@ -4,6 +4,7 @@ import machine.Operation;
 import source.Errors;
 import source.VisitorDebugger;
 import syms.SymEntry;
+import syms.Type;
 import tree.StatementNode.*;
 
 /**
@@ -123,11 +124,14 @@ public class CodeGenerator implements DeclVisitor, StatementTransform<Code>,
         code.genComment("assignment to " + node.getVariable() + ":");
         /* Generate code to evaluate the expression */
         code.append(node.getExp().genCode(this));
+        //System.out.println("code 1 ass: " +code + " node: " + node.getExp().toString());
         /* Generate the code to load the address of the variable */
         code.append(node.getVariable().genCode(this));
+        //System.out.println("code 2 ass: " +code + " variable: " + node.getExp().toString());
         /* Generate the store based on the type/size of value */
         code.genStore(node.getExp().getType());
         endGen("Assignment");
+        //System.out.println("Code 3 ass: " + code);
         return code;
     }
 
@@ -413,12 +417,25 @@ public class CodeGenerator implements DeclVisitor, StatementTransform<Code>,
     }
 
     @Override
-    public Code RecordConstructorNode(ExpNode.RecordConstructorNode node) {
+    public Code visitRecordConstructorNode(ExpNode.RecordConstructorNode node) {
         beginGen("Record Constructor");
+        System.out.println("RecordConstructor");
         Code code = new Code();
-        System.out.println("fuuuuuck");
+        int recordSize = node.getType().getRecordType().getSpace(); // Calculate the total size of the record.
+        code.genAllocStack(recordSize); // Generate code to allocate space for the record.
         for (ExpNode exp : node.getExpList()) {
-            code.append(exp.genCode(this));
+            Code c = exp.genCode(this);
+            code.append(c); // Evaluate the expression
+
+/*            // Set the base address of the record.
+            code.genLoadConstant(fieldOffset); // Load the field offset as a constant
+            code.generateOp(Operation.ADD); // Add the field offset to the current address
+
+            // Generate code to store the evaluated expression in the corresponding field of the record.
+            code.genStore(exp.getType());
+            System.out.println("fieldOffset: " + fieldOffset + " generated code: " + c );
+            fieldOffset += exp.getType().getSpace(); // Update the field offset for the next field
+            System.out.println("fieldOffset, after: " + fieldOffset );*/
         }
         endGen("Record Constructor");
         return code;
@@ -428,15 +445,21 @@ public class CodeGenerator implements DeclVisitor, StatementTransform<Code>,
     public Code visitFieldAcessNode(ExpNode.FieldAcessNode node) {
         beginGen("FieldAcess");
         Code code = new Code();
-
+        // Generate code for the record expression
         code.append(node.getLeftValue().genCode(this));
-        code.genComment("add field offset for storing");
+        Type.RecordType recordType = (Type.RecordType) node.getLeftValue().getType().getRecordType();
+        // Find the field in the record type
+        // Get the field offset
+        int fieldOffset = recordType.getOffset(node.getFieldName());
+        // Load the field offset
+        code.genLoadConstant(fieldOffset);
+        // Add the field offset to the base address of the record
         code.generateOp(Operation.ADD);
-
+        // Load the value of the field using its resolved type
         endGen("FieldAcess");
+
         return code;
     }
-
 
 
 
@@ -445,6 +468,7 @@ public class CodeGenerator implements DeclVisitor, StatementTransform<Code>,
     @Override
     public Code visitPointerDereferenceNode(ExpNode.PointerDereferenceNode node) {
         beginGen("PointerDereference");
+        System.out.println("PointerDereference");
         Code code = new Code();
 
         // Generate code for the pointer expression
@@ -460,11 +484,11 @@ public class CodeGenerator implements DeclVisitor, StatementTransform<Code>,
     @Override
     public Code visitNewNode(ExpNode.NewNode node) {
         beginGen("New");
+        System.out.println("VisitNewNode");
         Code code = new Code();
 
         // Load the size of the memory block to be allocated
-        int size = node.getType().getSpace();
-        code.genLoadConstant(size);
+        code.genLoad(node.getType());
 
         // Call the memory allocation routine
         code.generateOp(Operation.ALLOC_HEAP);
